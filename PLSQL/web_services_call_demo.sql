@@ -207,7 +207,37 @@ DBMS_OUTPUT.PUT_LINE('ID :'||usrid||' token :'||token);
 END;
 /
 
+----API for calling ReST Style web services
 
+APEX_WEB_SERVICE.MAKE_REST_REQUEST(
+    p_url               IN VARCHAR2, --The URL endpoint of the Web service.
+    p_http_method       IN VARCHAR2,
+    p_username          IN VARCHAR2 default null,
+    p_password          IN VARCHAR2 default null,
+    p_proxy_override    IN VARCHAR2 default null,
+    p_transfer_timeout  IN NUMBER   default 180,
+    p_body              IN CLOB default empty_clob(),
+    p_body_blob         IN BLOB default empty_blob(),
+    p_parm_name         IN apex_application_global.VC_ARR2 default empty_vc_arr,
+    p_parm_value        IN apex_application_global.VC_ARR2 default empty_vc_arr,
+    p_wallet_path       IN VARCHAR2 default null,
+    p_wallet_pwd        IN VARCHAR2 default null ) 
+RETURN CLOB;
+
+--Use this procedure to invoke a SOAP style Web service with the supplied SOAP envelope and store the results in a collection.
+
+APEX_WEB_SERVICE.MAKE_REQUEST (
+    p_url               IN VARCHAR2, --The URL endpoint of the Web service.
+    p_action            IN VARCHAR2 default null, ---The SOAP Action corresponding to the operation to be invoked. There is no action in ReST
+    p_version           IN VARCHAR2 default '1.1',
+    p_collection_name   IN VARCHAR2 default null,
+    p_envelope          IN CLOB, ---The SOAP envelope to post to the service.
+    p_username          IN VARCHAR2 default null,
+    p_password          IN VARCHAR2 default null,
+    p_proxy_override    IN VARCHAR2 default null,
+    p_transfer_timeout  IN NUMBER   default 180,
+    p_wallet_path       IN VARCHAR2 default null, --The file system path to a wallet if the URL endpoint is https
+    p_wallet_pwd        IN VARCHAR2 default null );
 
 
 

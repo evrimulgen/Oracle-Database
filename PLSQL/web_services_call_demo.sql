@@ -176,25 +176,33 @@ DECLARE
 l_response CLOB;
 l_url VARCHAR2(250) := 'https://reqres.in/api/register'; --update url
 usrid NUMBER;
+token VARCHAR2(100);
 l_request CLOB;
 BEGIN
 apex_web_service.g_request_headers(1).name := 'Content-Type';
 apex_web_service.g_request_headers(1).value := 'application/json';
-l_request:=
+--Make the request body
+
+APEX_JSON.initialize_clob_output;
+APEX_JSON.open_object; ---{
+APEX_JSON.write('email','eve.holt@reqres.in');
+APEX_JSON.write('password','pistol');
+APEX_JSON.close_object; --}
+l_request := APEX_JSON.get_clob_output;
+--pass the body to the WEB service call.
 l_response :=apex_web_service.make_rest_request(p_url => l_url,
                                                p_http_method => 'POST',
                                                p_wallet_path => 'file:C:\app\db_home\bin\ow\wallets', --neded for https acccess
                                                p_wallet_pwd => '88Asfkol$',
-                                               p_parm_name => apex_util.string_to_table('"email":"password"'),
-                                               p_parm_value => apex_util.string_to_table('"eve.holt@reqres.in":"pistol"')
+                                               p_body => l_request
                                                );
 
 DBMS_OUTPUT.PUT_LINE(l_response);
 --parse the response
---APEX_JSON.parse(l_response);
---usrid := APEX_JSON.get_number(p_path => 'id');
-
---DBMS_OUTPUT.PUT_LINE('Created ID is :'||usrid);
+APEX_JSON.parse(l_response);
+usrid := APEX_JSON.get_number(p_path => 'id');
+token := APEX_JSON.get_varchar2(p_path => 'token');
+DBMS_OUTPUT.PUT_LINE('ID :'||usrid||' token :'||token);
 
 END;
 /

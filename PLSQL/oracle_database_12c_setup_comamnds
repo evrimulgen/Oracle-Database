@@ -1,0 +1,21 @@
+---set current container
+show con_name;
+--check available pdbs
+column name format a20
+select name, con_id from v$pdbs;
+
+--get service names corresponding to pdbs
+
+select name as "serviceName"
+from v$active_services
+where con_id = 3; --orclpdb
+
+
+
+--change current container
+ALTER SESSION SET CONTAINER = ORCLPDB;
+--check status od pdbs
+select name, open_mode from v$pdbs; --should be in READ-WRTTE MODE
+
+
+URL: https://localhost:5500/em

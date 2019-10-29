@@ -239,7 +239,32 @@ APEX_WEB_SERVICE.MAKE_REQUEST (
     p_wallet_path       IN VARCHAR2 default null, --The file system path to a wallet if the URL endpoint is https
     p_wallet_pwd        IN VARCHAR2 default null );
 
+---- How to Get response Headers from a Response using APEX_WEB_SERVICE
+ 
+--Set Request Headers
+   apex_web_service.g_request_headers(1).name := 'Authorization';
+   apex_web_service.g_request_headers(1).value := '[MY API TOKEN]';
+   apex_web_service.g_request_headers(2).name := 'Content-Type';
+   apex_web_service.g_request_headers(2).value := 'application/json';
+   apex_web_service.g_request_headers(3).name := 'Content-Length';
+   apex_web_service.g_request_headers(3).value := '[CONTENT LENGTH IN BYTES OF REQUEST BODY]';
 
+       l_lcResult := apex_web_service.make_rest_request(p_url          => 'MY API URL'
+                                                       ,p_http_method  => 'POST'
+                                                       ,p_body         => 'REQUEST BODY IN JSON FORMAT');
+-- After the request the headers "change" automatically to the response headers. You can get the response headers as followed
+-- If you are searching for a specific response header (like me), you can use this:
+--Here we search for the header-field called 'Location'    
+                                            
+ for i in 1.. apex_web_service.g_headers.count loop
+    l_vcHeaderName := apex_web_service.g_headers(i).name;
+    l_vcHeaderValue := apex_web_service.g_headers(i).value;
+
+    exit when l_vcHeaderName = 'Location';
+ end loop;
+
+dbms_output.put_line('Name: ' || l_vcHeaderName);
+dbms_output.put_line('Value: ' || l_vcHeaderValue);
 
 
 

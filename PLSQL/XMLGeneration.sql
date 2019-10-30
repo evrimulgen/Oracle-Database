@@ -80,6 +80,46 @@ select XMLQuery('copy $tmp := $p modify
 DBMS_output.put_line(l_clob);
 end;
 /
+--- insert a node into another node XML
+-- here we are passing 2 XML docs and combining them
+declare
+l_src XMLTYPE:=XMLTYPE('<ord>
+  <head>
+    <ord_code>123</ord_code>
+    <ord_date>01-01-2015</ord_date>
+  </head>
+</ord>');
+
+l_dst XMLTYPE:=XMLTYPE('<pos>
+  <pos_code>456</pos_code>
+  <pos_desc>description</pos_desc>
+</pos>');
+l_final CLOB;
+
+begin
+    
+select XMLQuery('copy $tmp := $p1 modify
+                insert node $p2 as last into $tmp
+                return $tmp' passing l_src as "p1",l_dst as "p2" returning CONTENT).getClobval() into l_final from dual;
+DBMS_OUTPUT.PUT_LINE(l_final);
+end;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

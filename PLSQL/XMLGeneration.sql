@@ -80,6 +80,145 @@ select XMLQuery('copy $tmp := $p modify
 DBMS_output.put_line(l_clob);
 end;
 /
+--- insert a node into another node XML
+-- here we are passing 2 XML docs and combining them
+DECLARE
+l_src XMLTYPE:=XMLTYPE('<ord>
+  <head>
+    <ord_code>123</ord_code>
+    <ord_date>01-01-2015</ord_date>
+  </head>
+</ord>');
+
+l_dst XMLTYPE:=XMLTYPE('<pos>
+  <pos_code>456</pos_code>
+  <pos_desc>description</pos_desc>
+</pos>');
+l_final CLOB;
+
+BEGIN
+    
+SELECT XMLQUERY('copy $tmp := $p1 modify
+                insert node $p2 as last into $tmp
+                return $tmp' PASSING l_src as "p1",l_dst as "p2" RETURNING CONTENT).getClobval() into l_final from dual;
+DBMS_OUTPUT.PUT_LINE(l_final);
+END;
+/
+--warehouse table
+
+
+select warehouse_id,
+       EXTRACTVALUE(warehouse_spec,'/Warehouse/Area'),
+       XMLQuery('for $i in /Warehouse 
+                   return <Details><Docks>{$i/Docks/text()}</Docks> <Rail> {if ($i/RailAccess ="N") then "false" else "true" }</Rail> </Details>' 
+                   passing warehouse_spec returning CONTENT).getClobVal() as "RESULT"
+from warehouses;
+
+--synatx XMLSerialize(CONTENT XMLTYPE)
+select warehouse_id,
+       EXTRACTVALUE(warehouse_spec,'/Warehouse/Area'),
+       XMLSerialize(CONTENT XMLQuery('for $i in /Warehouse 
+                   return <Details><Docks>{$i/Docks/text()}</Docks> <Rail> {if ($i/RailAccess ="N") then "false" else "true" }</Rail> </Details>' 
+                   passing warehouse_spec returning CONTENT)) as "RESULT"
+from warehouses;
+
+--XMLtable and XMLQuery together.****
+select warehouse_id,
+       EXTRACTVALUE(warehouse_spec,'/Warehouse/Area'),
+       x.*
+       from warehouses,
+       XMLTABLE('/Details' 
+       passing XMLQuery('for $i in /Warehouse 
+                   return <Details><Docks>{$i/Docks/text()}</Docks> <Rail> {if ($i/RailAccess ="N") then "false" else "true" }</Rail> </Details>' 
+                   passing warehouse_spec returning CONTENT) 
+        columns
+        docks NUMBER path 'Docks',
+        rail VARCHAR2(10) path 'Rail'
+               ) x;
+
+-- XMLType Transform 
+
+DECLARE
+l_xml XMLTYPE:=XMLTYPE('<?xml version="1.0" encoding="UTF-8"?> 
+<?xml-stylesheet type="text/xsl "href="Rule.xsl" ?> 
+ <student> 
+  <s> 
+   <name> Divyank Singh Sikarwar </name> 
+   <branch> CSE</branch> 
+   <age>18</age> 
+   <city> Agra </city> 
+  </s> 
+  <s> 
+   <name> Aniket Chauhan </name> 
+   <branch> CSE</branch> 
+   <age> 20</age> 
+   <city> Shahjahanpur </city> 
+  </s> 
+  <s>  
+   <name> Simran Agarwal</name> 
+   <branch> CSE</branch> 
+   <age> 23</age> 
+   <city> Buland Shar</city> 
+  </s> 
+  <s>  
+   <name> Abhay Chauhan</name> 
+   <branch> CSE</branch> 
+   <age> 17</age> 
+   <city> Shahjahanpur</city> 
+  </s> 
+  <s>  
+   <name> Himanshu Bhatia</name> 
+   <branch> IT</branch> 
+   <age> 25</age> 
+   <city> Indore</city> 
+  </s> 
+ </student> ');
+
+l_xml_xs XMLTYPE := XMLTYPE('<?xml version="1.0" encoding="UTF-8"?> 
+<xsl:stylesheet version="1.0" 
+  xmlns:xsl="http://www.w3.org/1999/XSL/Transform"> 
+<xsl:template match="/"> 
+ <html> 
+ <body> 
+  <h1 align="center">Students'' Basic Details</h1> 
+   <table border="3" align="center" > 
+   <tr> 
+    <th>Name</th> 
+    <th>Branch</th> 
+    <th>Age</th> 
+    <th>City</th> 
+   </tr> 
+    <xsl:for-each select="student/s"> 
+   <tr> 
+    <td><xsl:value-of select="name"/></td> 
+    <td><xsl:value-of select="branch"/></td> 
+    <td><xsl:value-of select="age"/></td> 
+    <td><xsl:value-of select="city"/></td> 
+   </tr> 
+    </xsl:for-each> 
+    </table> 
+</body> 
+</html> 
+</xsl:template> 
+</xsl:stylesheet>');
+
+
+
+
+
+BEGIN
+DBMS_OUTPUT.PUT_LINE(XMLTYPE.Transform(l_xml,l_xml_xs).getCLobVal());
+--NULL;
+
+END;
+
+
+
+
+
+
+
+
 
 create table Users
 (

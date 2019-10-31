@@ -306,4 +306,67 @@ select XMLElement("EventList",XMLAgg(XMLElement("Event",
                    
 from events e;
 
+--sample XML
+<Department DEPTNO="10">
+  <DNAME>Administration</DNAME>
+    <EMP_LIST>
+      <EMP_T EMPNO="200">
+        <ENAME>Whalen</ENAME>
+      </EMP_T>
+    </EMP_LIST>
+</Department>
+--below XML will create below nested XML
+select XMLSerialize(CONTENT XMLElement("Department",
+                 XMLAttributes(d.department_id as "DEPTNO",'http://www.w3.org/2001/XMLSchema' as "xmlns:xsi",
+                 'http://www.oracle.com/Employee.xsd' as "xsi:nonamespaceSchemaLocation",'http://www.w3.org/2001/XMLSchema' as "xmlns"),
+                 XMLElement("DNAME", d.department_name),
+                 XMLElement("EMP_LIST",
+                             (SELECT XMLAGG(XMLElement("EMP_T",
+                                        XMLAttributes(e.employee_id as "EMPNO"),
+                                        XMLElement("ENAME",e.first_name)
+                                        ))
+                                from hr.employees e 
+                                where e.department_id = d.department_id)
+                 
+                 )
+                 )) as "XML"
+from hr.departments d ;
+--------using XMLForest to add more than one child under EMP_T tag.
+select XMLSerialize(CONTENT XMLElement("Department",
+                 XMLAttributes(d.department_id as "DEPTNO"),
+                 XMLElement("DNAME", d.department_name),
+                 XMLElement("EMP_LIST",
+                             (SELECT XMLAGG(XMLElement("EMP_T",
+                                        XMLAttributes(e.employee_id as "EMPNO"),
+                                        XMlForest(e.first_name||e.last_name as "ENAME",
+                                                  e.email as "EMAIL",
+                                                  e.hire_date as "HIRE_DATE",
+                                                  e.salary as "SALARY")
+                                        ))
+                                from hr.employees e 
+                                where e.department_id = d.department_id)
+                 
+                 )
+                 )) as "XML"
+        from hr.departments d ;
+
+
+/
+
+/*
+<Department deptno="30">
+  <Employee>PU_MAN Raphaely</Employee>
+  <Employee>PU_CLERK Colmenares</Employee>
+  <Employee>PU_CLERK Himuro</Employee>
+  <Employee>PU_CLERK Tobias</Employee>
+  <Employee>PU_CLERK Baida</Employee>
+  <Employee>PU_CLERK Khoo</Employee></Department>
+
+<Department deptno="40">
+  <Employee>HR_REP Mavris</Employee>
+</Department>
+
+*/
+
+
 

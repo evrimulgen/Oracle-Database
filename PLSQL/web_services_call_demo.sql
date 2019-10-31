@@ -41,6 +41,47 @@ BEGIN
   RETURN TO_NUMBER(l_result);
 END;
 /
+------
+DECLARE
+  l_envelope  CLOB;
+  l_xml       XMLTYPE;
+  l_result    VARCHAR2(32767);
+BEGIN
+
+  -- Build a SOAP document appropriate for the web service.
+  l_envelope := '<?xml version="1.0" encoding="UTF-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <soap:Body>
+    <ws_add xmlns="http://oracle-base.com/webservices/" soap:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+      <int1 xsi:type="xsd:integer">' || 1 || '</int1>
+      <int2 xsi:type="xsd:integer">' || 2 || '</int2>
+    </ws_add>
+  </soap:Body>
+</soap:Envelope>';
+
+  -- Get the XML response from the web service.
+  l_xml := APEX_WEB_SERVICE.make_request(
+    p_url      => 'http://oracle-base.com/webservices/server.php',
+    p_action   => 'http://oracle-base.com/webservices/server.php/ws_add',
+    p_envelope => l_envelope
+  );
+
+  -- Display the whole SOAP document returned.
+  DBMS_OUTPUT.put_line('l_xml=' || l_xml.getClobVal());
+
+  -- Pull out the specific value of interest.
+  l_result := APEX_WEB_SERVICE.parse_xml(
+    p_xml   => l_xml,
+    p_xpath => '//return/text()',
+    p_ns    => 'xmlns:ns1="http://oracle-base.com/webservices/"'
+  );
+
+  DBMS_OUTPUT.put_line('l_result=' || l_result);
+
+END;
+/
+
 
 select ADD_NUMBERS(10,6) from dual;
 

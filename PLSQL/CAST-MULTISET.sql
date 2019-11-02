@@ -92,79 +92,25 @@ BEGIN
            )
   BULK COLLECT INTO l_message 
   FROM   departments d , employees e
-  where  e.department_id = d.department_id and d.department_id=10 ; 
-  --Print the content 
---  for i in 1..l_message.COUNT 
---  loop
---        DBMS_OUTPUT.PUT_LINE(l_message(i).department_id);
---        DBMS_OUTPUT.PUT_LINE(l_message(i).department_name);
---        l_employee_t := l_message(i).emp_tab;
---        for j in 1..l_employee_t.COUNT
---        loop
---            DBMS_OUTPUT.PUT_LINE('Employee Name:'||l_employee_t(j).employee_name);
---        end loop;
---  end loop;
-  
-  --Generate XML
---  <Departments>
---    <department id = "department_id" name = "department_name" >
---          <employees>
-    --          <employee id = "employee_id">
-        --          <employee_name> </employee_name>
-        --          <salary> </salary>
-    --          </employee>
---          </employees>
---    </department>
---  </Departments>
---execute immediate 'create table result_tmp (department_id NUMBER,department_name VARCHAR2(100), employee_id NUMBER,employee_name varchar2(100),salary NUMBER)';
-  
---  insert into result_tmp
---
---  select t.department_id,
---         t.department_name,
---         g.employee_id,
---         g.employee_name,
---         g.salary
---    
---  from  TABLE(CAST(l_message as deps_t)) t,
---        TABLE(CAST(t.emp_tab as emp_ot)) g;
+  where  e.department_id = d.department_id ; 
         
 SELECT XMLELEMENT("Departments", 
        ( 
                 SELECT   XMLAGG(XMLELEMENT("department", 
-                                          xmlattributes(t.department_id AS "id", t.department_name AS "name"),
-                         ( 
-                                SELECT XMLELEMENT("employees",
-                                                  (SELECT XMLAGG(XMLELEMENT("employee", 
+                                            xmlattributes(t.department_id AS "id", t.department_name AS "name"),
+                                            XMLELEMENT("employees",
+                                                        XMLAGG(XMLELEMENT("employee", 
                                                                  xmlattributes(g.employee_id AS "id"), 
                                                                  xmlforest(g.employee_name as "employee_name") ) ) 
-                                                    FROM TABLE(cast(t.emp_tab AS emp_ot)) g 
-                                                   ) )
-                                FROM   DUAL ) ---end of inner select
-                         ) ) 
+                                                    
+                                                       )
+                                            ))
                 FROM     TABLE(cast(l_message AS deps_t)) t, 
-                GROUP BY t.department_id) ).getclobval() 
+                         TABLE(cast(t.emp_tab AS emp_ot)) g 
+                GROUP BY t.department_id,t.department_name) ).getclobval() 
 INTO   l_xml_clob 
 FROM   dual;
         
-        
---  group by t.department_id;
---for rec1 in ( 
---select t.department_id||','
---       ||t.department_name||','
---       ||g.employee_id||','
---       ||g.employee_name||','
---       ||g.salary as r
---from  TABLE(CAST(l_message as deps_t)) t
---      ,TABLE(CAST(t.emp_tab as emp_ot)) g ) 
---      loop
-----      DBMS_OUTPUT.PUT_LINE(rec1.department_id);
-----      DBMS_OUTPUT.PUT_LINE(rec1.department_name);
-----      DBMS_OUTPUT.PUT_LINE(rec1.employee_id);
-----      DBMS_OUTPUT.PUT_LINE(rec1.employee_name);
-----      DBMS_OUTPUT.PUT_LINE(rec1.salary);
---      DBMS_OUTPUT.PUT_LINE(rec1.r);
---      end loop;  
 DBMS_OUTPUT.PUT_LINE(l_xml_clob);
   
 END;

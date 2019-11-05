@@ -161,3 +161,64 @@ begin
 end;
 /
 
+-----------------------------------------------DBMS_AQ-----------------------------------------------
+DBMS_AQ.ENQUEUE
+(
+queue_name => --name of the queue to which message should be enqueued.
+enqueue_options => --enqueue_options_t
+message_options =>--message_options_t
+payload =>
+msgid =>
+);
+--visibility:  specifies the transactional behaviour of the enqueue request.
+--ON_COMMIT : the enqueue is part of current transaction. 
+--IMMEDIATE : 
+
+TYPE SYS.ENQUEUE_OPTIONS_T IS RECORD (
+   visibility            BINARY_INTEGER  DEFAULT ON_COMMIT,
+   relative_msgid        RAW(16)         DEFAULT NULL,
+   sequence_deviation    BINARY_INTEGER  DEFAULT NULL,
+   transformation        VARCHAR2(61)    DEFAULT NULL,
+   delivery_mode         PLS_INTEGER     NOT NULL DEFAULT PERSISTENT);
+
+
+
+DBMS_AQ.DEQUEUE (
+   queue_name          IN      VARCHAR2,
+   dequeue_options     IN      dequeue_options_t,
+   message_properties  OUT     message_properties_t,
+   payload             OUT     "<ADT_1>"
+   msgid               OUT     RAW);
+
+TYPE DEQUEUE_OPTIONS_T IS RECORD (
+   consumer_name     VARCHAR2(30)    DEFAULT NULL, --Name of the consumer. Only those messages matching the consumer name are accessed. If a queue is not set up for multiple consumers, then this field should be set to NULL.
+   dequeue_mode      BINARY_INTEGER  DEFAULT REMOVE, --REMOVE: Read the message and delete it. This setting is the default. The message can be retained in the queue table based on the retention properties.
+   navigation        BINARY_INTEGER  DEFAULT NEXT_MESSAGE, --Retrieve the next message that is available and matches the search criteria. If the previous message belongs to a message group, then AQ retrieves the next available message that matches the search criteria and belongs to the message group. This setting is the default.
+   visibility        BINARY_INTEGER  DEFAULT ON_COMMIT,--on_commit and immediate:--COMMIT:The dequeue will be part of the current transaction. This setting is the default.
+   --IMMEDIATE: The dequeue operation is not part of the current transaction, but an autonomous transaction which commits at the end of the operation
+   wait              BINARY_INTEGER  DEFAULT FOREVER, --Specifies the wait time if there is currently no message available which matches the search criteria
+   msgid             RAW(16)         DEFAULT NULL,
+   correlation       VARCHAR2(128)   DEFAULT NULL,
+   deq_condition     VARCHAR2(4000)  DEFAULT NULL,
+   signature         aq$_sig_prop    DEFAULT NULL,
+   transformation    VARCHAR2(61)    DEFAULT NULL,
+   delivery_mode     PLS_INTEGER     DEFAULT PERSISTENT);
+
+
+
+TYPE message_properties_t IS RECORD (
+   priority               BINARY_INTEGER  NOT NULL DEFAULT 1,
+   delay                  BINARY_INTEGER  NOT NULL DEFAULT NO_DELAY,
+   expiration             BINARY_INTEGER  NOT NULL DEFAULT NEVER,
+   correlation            VARCHAR2(128)   DEFAULT NULL, --Returns the identifier supplied by the producer of the message at enqueue time.
+   attempts               BINARY_INTEGER,
+   recipient_list         AQ$_RECIPIENT_LIST_T, --This parameter is only valid for queues that allow multiple consumers. The default recipients are the queue subscribers. This parameter is not returned to a consumer at dequeue time
+   exception_queue        VARCHAR2(61)    DEFAULT NULL,
+   enqueue_time           DATE,
+   state                  BINARY_INTEGER,
+   sender_id              SYS.AQ$_AGENT   DEFAULT NULL, 
+   original_msgid         RAW(16)         DEFAULT NULL,
+   signature              aq$_sig_prop    DEFAULT NULL,
+   transaction_group      VARCHAR2(30)    DEFAULT NULL,
+   user_property          SYS.ANYDATA     DEFAULT NULL
+   delivery_mode          PLS_INTEGER     NOT NULL DEFAULT DBMS_AQ.PERSISTENT); 

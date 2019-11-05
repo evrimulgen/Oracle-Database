@@ -222,3 +222,12 @@ TYPE message_properties_t IS RECORD (
    transaction_group      VARCHAR2(30)    DEFAULT NULL,
    user_property          SYS.ANYDATA     DEFAULT NULL
    delivery_mode          PLS_INTEGER     NOT NULL DEFAULT DBMS_AQ.PERSISTENT); 
+   
+   
+   DBMS_AQADM.ADD_SUBSCRIBER (
+   queue_name      IN    VARCHAR2,
+   subscriber      IN    sys.aq$_agent,
+   rule            IN    VARCHAR2 DEFAULT NULL,
+   transformation  IN    VARCHAR2 DEFAULT NULL
+   queue_to_queue  IN    BOOLEAN DEFAULT FALSE,
+   delivery_mode   IN    PLS_INTEGER DEFAULT DBMS_AQADM.PERSISTENT);

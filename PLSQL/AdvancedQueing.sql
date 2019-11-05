@@ -148,7 +148,7 @@ begin
     dequeue_options.visibility := dbms_aq.immediate;
     
     
-  dbms_aq.dequeue(
+  DBMS_AQ.DEQUEUE(
   queue_name    => 'aq_admin.orders_msg_queue',
   dequeue_options => dequeue_options,
   message_properties => message_properties,

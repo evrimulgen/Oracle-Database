@@ -16,6 +16,6 @@ where con_id = 3; --orclpdb
 ALTER SESSION SET CONTAINER = ORCLPDB;
 --check status od pdbs
 select name, open_mode from v$pdbs; --should be in READ-WRTTE MODE
-
+ALTER PLUGGABLE DATABASE orclpdb OPEN READ WRITE ; --open 
 
 URL: https://localhost:5500/em

@@ -1,0 +1,24 @@
+---you can create queues with XMLType payload type. This allows queue to hold more than one message type
+--sample scenario : 2 applications OE and OS schema
+--OE schema represents order in ORDER_TYP and OS in XMLType . OS is a subscriber to OE and since the messages in different format, transformation needs to be applied.
+
+---OS schema
+--create queue table and queue
+
+BEGIN
+
+DBMS_AQADM.create_queue_table
+(
+	queue_table => 'os_orders_pr_mqtab',
+	queue_payload_type => 'XMLTYPE',
+	comment => 'Overseas Shipping MultiConsumer Orders Queue Table.',
+	multitple_consumers => true
+);
+
+DBMS_AQADM.create_queue(
+queue_name => 'OS_bookedorders_que',
+queue_table => 'os_orders_pr_mqtab'
+);
+
+END;
+/ 

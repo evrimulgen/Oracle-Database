@@ -1,0 +1,51 @@
+---queue to queue propagation
+create type mytype as object (n number);
+/
+--create destination queue table 
+begin
+dbms_aqadm.create_queue_table(queue_table => 'queue_table',queue_payload_type => 'mytype', multiple_consumers => true);
+
+end;
+/
+--create queue 
+begin
+dbms_aqadm.create_queue(queue_name => 'queue2',queue_table => 'queue_table',queue_type => dbms_aqadm.normal_queue);
+end;
+/
+--start the queue
+begin
+dbms_aqadm.start_queue('queue2');
+end;
+/
+
+--add a subscriber
+begin
+dbms_aqadm.add_subscriber(queue_name => 'queue2',subscriber => aq$_agent('sub2',null,null));
+end;
+/
+--create source queue table
+
+begin
+dbms_aqadm.create_queue_table(queue_table => 'queue_table_source',queue_payload_type => 'mytype', multiple_consumers => true);
+
+end;
+/
+begin
+dbms_aqadm.create_queue(queue_name => 'queue1', queue_table => 'queue_table_source');
+
+end;
+/
+--start the queue
+begin
+dbms_aqadm.start_queue('queue1');
+end;
+/
+--add subscriber
+
+begin
+dbms_aqadm.add_subscriber(queue_name => 'queue1', subscriber => aq$_agent('sub1',null,null),queue_to_queue => true);--second parameter should be a dblink in case it's on another database.
+
+end;
+/
+
+

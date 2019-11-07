@@ -80,7 +80,7 @@ BEGIN
 END;
 --if you get pluggable database not open error
 
-ALTER PLUGGABLE DATABASE orclpdb OPEN READ WRITE ;
+
 
 
 

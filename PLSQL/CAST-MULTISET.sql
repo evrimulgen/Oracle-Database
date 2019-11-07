@@ -3,10 +3,10 @@ CREATE TYPE emp_o AS OBJECT (
     employee_id     NUMBER,
     employee_name   VARCHAR2(50)
 );
-
+DROP TYPE emp_o;
 CREATE TYPE emp_t IS
     TABLE OF emp_o;
-
+DROP TYPE emp_t;
 DECLARE
     l_employees_array emp_t := NULL;
 BEGIN
@@ -72,30 +72,65 @@ BEGIN
  
 
 END;
+/
 ---------------------- OR ------------------------------
 
 DECLARE 
   l_message DEPS_T;
+  l_employee_t emp_ot;
+  l_xml_clob CLOB;
 BEGIN 
   SELECT deps_o(
-           department_id,
-           department_name,
-           CAST(
-             MULTISET(
-               SELECT emp_o(
-                        employee_id,
-                        first_name || ' ' || last_name,
-                        salary
-                      )
-               FROM   employees e
-               WHERE  e.department_id = d.department_id
-             ) AS emp_ot
+           d.department_id,
+           d.department_name,
+           emp_ot(emp_o(
+                        e.employee_id,
+                        e.first_name || ' ' || e.last_name,
+                        e.salary
+                       )
+                  )
            )
-         )
   BULK COLLECT INTO l_message 
-  FROM   departments d; 
+  FROM   departments d , employees e
+  where  e.department_id = d.department_id ; 
+        
+SELECT XMLELEMENT("Departments", 
+       ( 
+                SELECT   XMLAGG(XMLELEMENT("department", 
+                                            xmlattributes(t.department_id AS "id", t.department_name AS "name"),
+                                            XMLELEMENT("employees",
+                                                        XMLAGG(XMLELEMENT("employee", 
+                                                                 xmlattributes(g.employee_id AS "id"), 
+                                                                 xmlforest(g.employee_name as "employee_name") ) ) 
+                                                    
+                                                       )
+                                            ))
+                FROM     TABLE(cast(l_message AS deps_t)) t, 
+                         TABLE(cast(t.emp_tab AS emp_ot)) g 
+                GROUP BY t.department_id,t.department_name) ).getclobval() 
+INTO   l_xml_clob 
+FROM   dual;
+        
+DBMS_OUTPUT.PUT_LINE(l_xml_clob);
+  
 END;
 /
 
+select * from employees where department_id =20;
+
+select  * from employees;
 
 
+select XMlElement("Departments",XMLAttributes('http://www.w3.org/TR/html4/' as "xmlns:h",'https://www.w3schools.com/furniture' as "xmlns:f"),XMLAgg(XMLElement("department",
+        XMLAttributes(e.department_id as "id"),
+        XMLElement("employees",
+                    XMLAgg(XMlElement("employee",
+                             XMlForest(e.first_name as "name",e.salary as "salary")
+                     XML))
+        
+        )
+       ))).getClobval()
+from employees e
+group by e.department_id;
+
+select * from result_tmp;

@@ -212,161 +212,56 @@ DBMS_OUTPUT.PUT_LINE(XMLTYPE.Transform(l_xml,l_xml_xs).getCLobVal());
 
 END;
 
-
-
-
-
-
-
-
-
-create table Users
-(
-  UserID NUMBER,
-  Username VARCHAR2(100)
-);
-
-
-insert all into 
-Users 
-values
-(155, 'jweldz')
-into Users 
-values
-(218, 'pwarner')
- into Users  values
-(310, 'jeffrey')
-select 1 from dual;
-
-
-create table Events
-(
-  Id NUMBER NOT NULL,
-  UserId NUMBER NULL,
-  Title VARCHAR2(250) NOT NULL,
-  EventStart DATE NOT NULL
-);
-
-
-INSERT INTO Events (Id, UserId, Title,  EventStart) 
-VALUES (3409, NULL, 'Boxing Match', to_date('2014-10-05','YYYY-MM-DD'))
-
-
-create table UserEvents
-(
-  UserID NUMBER,
-  EventID NUMBER
-);
-
-select to_char(sys_extract_utc(systimestamp), 'yyyy-mm-dd"T"hh24:mi:ss"Z"') dt_as_utc
-from dual;
-
-INSERT ALL 
-INTO 
- UserEvents (UserID, EventID)  VALUES (155, 3409)
- INTO UserEvents (UserID, EventID)  VALUES (218, 3409)
-INTO  UserEvents (UserID, EventID)  VALUES (310, 3409)
-select 1 from dual;
-
---sample XML 
-
-<EventList>
-  <Event eventid="3409">
-    <Title>Boxing Match</Title>
-    <Player>
-      <UserID>155</UserID>
-      <Username>jweldz</Username>
-      <UserID>218</UserID>
-      <Username>pwarner</Username>
-      <UserID>310</UserID>
-      <Username>jeffrey</Username>
-    </Player>
-    <EventStart>2016-04-16T09:00:00</EventStart>
-  </Event>
-</EventList>
-
---Solution
-
-select XMLElement("EventList",XMLAgg(XMLElement("Event",
-                   XMLAttributes(e.id as "eventId"),
-                   XMLElement("Title",e.title),
-                   (select XMLElement("Player", XMLAgg(XMLForest(ue.userid as "UserID", 
-                                    u.username as "UserName")))
-                    from userEvents ue,
-                         users u
-                     where ue.userid = u.userid
-                       and ue.eventid = e.id ),
-                    XMLElement("EventStart",to_char((eventstart),'YYYY-MM-DD"T"HH24:MI:SS'))
-                   
-                   
-                   
-                   ))).getClobVal() as "RESULT"
-                   
-                   
-                   
-from events e;
-
---sample XML
-<Department DEPTNO="10">
-  <DNAME>Administration</DNAME>
-    <EMP_LIST>
-      <EMP_T EMPNO="200">
-        <ENAME>Whalen</ENAME>
-      </EMP_T>
-    </EMP_LIST>
-</Department>
---below XML will create below nested XML
-select XMLSerialize(CONTENT XMLElement("Department",
-                 XMLAttributes(d.department_id as "DEPTNO",'http://www.w3.org/2001/XMLSchema' as "xmlns:xsi",
-                 'http://www.oracle.com/Employee.xsd' as "xsi:nonamespaceSchemaLocation",'http://www.w3.org/2001/XMLSchema' as "xmlns"),
-                 XMLElement("DNAME", d.department_name),
-                 XMLElement("EMP_LIST",
-                             (SELECT XMLAGG(XMLElement("EMP_T",
-                                        XMLAttributes(e.employee_id as "EMPNO"),
-                                        XMLElement("ENAME",e.first_name)
-                                        ))
-                                from hr.employees e 
-                                where e.department_id = d.department_id)
-                 
-                 )
-                 )) as "XML"
-from hr.departments d ;
---------using XMLForest to add more than one child under EMP_T tag.
-select XMLSerialize(CONTENT XMLElement("Department",
-                 XMLAttributes(d.department_id as "DEPTNO"),
-                 XMLElement("DNAME", d.department_name),
-                 XMLElement("EMP_LIST",
-                             (SELECT XMLAGG(XMLElement("EMP_T",
-                                        XMLAttributes(e.employee_id as "EMPNO"),
-                                        XMlForest(e.first_name||e.last_name as "ENAME",
-                                                  e.email as "EMAIL",
-                                                  e.hire_date as "HIRE_DATE",
-                                                  e.salary as "SALARY")
-                                        ))
-                                from hr.employees e 
-                                where e.department_id = d.department_id)
-                 
-                 )
-                 )) as "XML"
-        from hr.departments d ;
-
-
 /
 
-/*
-<Department deptno="30">
-  <Employee>PU_MAN Raphaely</Employee>
-  <Employee>PU_CLERK Colmenares</Employee>
-  <Employee>PU_CLERK Himuro</Employee>
-  <Employee>PU_CLERK Tobias</Employee>
-  <Employee>PU_CLERK Baida</Employee>
-  <Employee>PU_CLERK Khoo</Employee></Department>
 
-<Department deptno="40">
-  <Employee>HR_REP Mavris</Employee>
-</Department>
 
-*/
+--XMLQuery
+
+declare
+l_xml XMlTYPE := XMlType.createXML(q'!<video id="647599251">
+   <studio></studio>
+   <director>Francesco Rosi</director>
+   <actorRef>916503211</actorRef>
+   <actorRef>916503212</actorRef>
+   <title>Carmen</title>
+   <dvd>18</dvd>
+   <laserdisk></laserdisk>
+   <laserdisk_stock></laserdisk_stock>
+   <genre>musical</genre>
+   <rating>PG</rating>
+   <runtime>125</runtime>
+   <user_rating>4</user_rating>
+   <summary>A fine screen adaptation of Bizet's
+      popular opera. </summary>
+   <details>Placido Domingo does it again, this time
+      in Bizet's popular opera.</details>
+   <vhs>15</vhs>
+   <beta_stock></beta_stock>
+   <year>1984</year>
+   <vhs_stock>88</vhs_stock>
+   <dvd_stock>22</dvd_stock>
+   <beta></beta>
+</video>!');
+l_clob CLOB;
+begin
+   select XMLQuery('for $i in $p/video
+                    where $i/user_rating = 4
+                    return <Details> $i/user_rating </Details>' passing l_xml as "p" returning content).getClobval()
+    into l_clob
+    from dual;
+DBMS_OUTPUT.PUT_LINE(l_clob);
+            
+
+end;
+/
+
+
+
+
+
+
+
 
 
 

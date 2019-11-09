@@ -93,3 +93,11 @@ FROM
 
 --- Sample output
 {"department-number":10,"department-name":"ACCOUNTING","location":"NEW YORK"}
+
+SELECT JSON_OBJECT('department-number' VALUE d.department_id,'department-name' VALUE d.department_name,'location' VALUE l.city)
+  FROM departments d,
+        locations l
+    WHERE d.location_id = l.location_id;
+
+SELECT JSON_OBJECTAGG('employee_id' VALUE e.employee_id,'employee_name' VALUE e.first_name )
+ FROM employees e;

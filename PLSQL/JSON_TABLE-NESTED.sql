@@ -44,3 +44,52 @@ SELECT t.*
     )
   
   ) t;
+
+  ---JSON Making
+  
+[{"percentage":0.5},[1,2,3],100,"California",null]
+
+SELECT JSON_ARRAY(JSON_OBJECT('percentage' VALUE "0.5"),JSON_ARRAY(1,2,3),100,'California',null
+)
+FROM dual;
+
+{
+	"departments": [{
+			"department_id": 10,
+			"department_name": "Administration",
+			"employees": [
+				1,
+				2,
+				3,
+				4
+			]
+		},
+		{
+			"department_id": 10,
+			"department_name": "Administration",
+			"employees": [
+				1,
+				2,
+				3,
+				4
+			]
+		}
+	]
+}
+
+----SOLUTION
+SELECT
+    JSON_OBJECT ( 'departments' VALUE JSON_ARRAYAGG(JSON_OBJECT('department_id' VALUE d.department_id, 'department_name' VALUE d.
+    department_name, 'employees' VALUE(
+        SELECT
+            JSON_ARRAYAGG(e.employee_id)
+        FROM
+            employees e
+        WHERE
+            e.department_id = d.department_id
+    ))) )
+FROM
+    departments d;
+
+--- Sample output
+{"department-number":10,"department-name":"ACCOUNTING","location":"NEW YORK"}

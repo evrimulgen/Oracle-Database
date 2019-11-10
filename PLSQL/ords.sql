@@ -45,7 +45,7 @@ SELECT id, template_id, source_type, method, source
 FROM   user_ords_handlers
 ORDER BY id;
 
----manually creating the above process
+---Manually creating the above process ** This is recommended for Understanding
 
 BEGIN
 ORDS.define_module(
@@ -194,8 +194,79 @@ end;
 --POST Method
 
 -- http://localhost:9090/ords/hr
+-- To start ReST Web services from SQL Developer, Go to Tools - ReST Data Services - Run ( choose the ords.war file from your dir)
+--- PLSQL Package as Source
+
+CREATE OR REPLACE procedure get_emp_details(p_empno NUMBER DEFAULT NULL) as
+l_output SYS_REFCURSOR;
+BEGIN
+    OPEN l_output FOR
+    SELECT  e.employee_id as "empno",
+            e.first_name||' '||e.last_name as "ename",
+            e.salary as "salary",
+            to_char(e.hire_date,'YYYYMMDD') as "hire_date"
+    FROM employees e
+    WHERE e.employee_id = NVL(p_empno,e.employee_id);
+
+    APEX_JSON.open_object;
+    APEX_JSON.write('employees',l_output);
+    APEX_JSON.close_object;
+
+END;
 
 
 
+--set up 
+BEGIN
+
+ ---Right now all the URI are like this http://localhost:9090/ords/hr
+--- if we want to chnage the 'hr' it needs to be done 
+--- Current URI : http://localhost:9090/ords/hr
+--- To Be URI : http://localhost:9090/ords/webservices
+
+
+ ORDS.enable_schema
+    (
+    p_enabled   => TRUE,
+    p_schema    => 'HR',
+    p_url_mapping_type  => 'BASE_PATH',
+    p_url_mapping_pattern   => 'webservices',
+    p_auto_rest_auth    => FALSE
+    );
+
+  ORDS.define_module(p_module_name => 'rest-v5',
+                     p_base_path   => 'saasservices/',
+                     p_comments    => 'This module is created to test base_path usability.'
+  );
+--
+  ORDS.define_template(
+      p_module_name => 'rest-v5',
+      p_pattern     => 'employees/:empno'
+  );
+--
+  ORDS.define_handler(
+      p_module_name => 'rest-v5',
+      p_pattern     => 'employees/:empno',
+      p_method      =>  'GET',
+      p_source_type =>  ORDS.source_type_plsql,
+      p_source      => 'BEGIN get_emp_details(:empno); END;'
+  );
+--add another template
+  ORDS.define_template(
+      p_module_name => 'rest-v5',
+      p_pattern     => 'employees/'
+  );
+ORDS.define_handler(
+      p_module_name => 'rest-v5',
+      p_pattern     => 'employees/',
+      p_method      =>  'GET',
+      p_source_type =>  ORDS.source_type_plsql,
+      p_source      => 'BEGIN get_emp_details(p_empno=> NULL); END;'
+  );    
+
+-- http://localhost:9090/ords/webservices/saasservices
+
+END;
+/
 
 

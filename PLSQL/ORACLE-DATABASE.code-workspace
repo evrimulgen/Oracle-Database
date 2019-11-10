@@ -1,0 +1,22 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"plsql-language.connections": [
+			{
+				"ID": 3,
+				"active": true,
+				"database": "localhost:1521/orclpdb",
+				"hidden": false,
+				"password": "hr",
+				"schema": "HR",
+				"username": "HR",
+				"name": "HR@localhost:1521/orclpdb"
+			}
+		],
+		"plsql-language.connection.activeInfos": "HR/hr@localhost:1521/orclpdb"
+	}
+}

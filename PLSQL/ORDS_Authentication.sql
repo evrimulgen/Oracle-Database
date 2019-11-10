@@ -8,7 +8,7 @@ BEGIN
     p_role_name => 'emp_role'
   );
   --create privilage
-  ORDS.create_privilege(
+  ̥ORDS.create_privilege(
       p_name        => 'emp_priv',
       p_role_name   => 'emp_role',
       p_label       => 'EMP Data',

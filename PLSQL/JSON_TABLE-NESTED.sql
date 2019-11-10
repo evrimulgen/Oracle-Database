@@ -101,3 +101,5 @@ SELECT JSON_OBJECT('department-number' VALUE d.department_id,'department-name' V
 
 SELECT JSON_OBJECTAGG('employee_id' VALUE e.employee_id,'employee_name' VALUE e.first_name )
  FROM employees e;
+
+ 

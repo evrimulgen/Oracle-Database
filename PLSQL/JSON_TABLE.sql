@@ -215,3 +215,33 @@ columns(
 )
 ) t;
 /
+
+
+
+
+DECLARE
+myJSON CLOB:='[{"name":"John", "age":31, "city":"New York"},{"name":"Sena", "age":27, "city":"Italy"}]';
+l_name VARCHAR2(100);
+
+CURSOR C_parse_json IS
+  SELECT t.name
+  FROM JSON_TABLE(myJSON,'$[*]'
+  COLUMNS
+  (
+    name VARCHAR2(20) PATH '$.name'
+
+  )
+) AS t; 
+
+BEGIN
+  OPEN C_parse_json;
+  LOOP
+    FETCH C_parse_json INTO l_name;
+    EXIT WHEN C_parse_json%NOTFOUND;
+  END LOOP;
+  CLOSE C_parse_json;
+
+  DBMS_OUTPUT.PUT_LINE(l_name);
+
+END;
+

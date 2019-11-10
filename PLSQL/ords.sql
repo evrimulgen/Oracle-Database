@@ -268,5 +268,106 @@ ORDS.define_handler(
 
 END;
 /
+---**** Create ResT data services that gives output in XML
+
+CREATE OR REPLACE PROCEDURE get_emp_details_xml(p_empno NUMBER DEFAULT NULL)
+AS
+l_clob CLOB;
+BEGIN 
+    SELECT XMLSerialize(CONTENT XMLELEMENT("employees",
+                     XMLAGG(XMLELEMENT("employee",
+                            XMLATTRIBUTES(e.employee_id as "employee_id"),
+                            XMLFOREST(e.first_name||' '||e.last_name as "name", e.salary as "salary",e.hire_date as "hire_date")
+                     )
+                  )
+                )
+            )
+    INTO l_clob 
+    FROM employees e
+    WHERE e.employee_id = NVL(p_empno,e.employee_id);
+
+    ---- IMPORTANT
+    OWA_UTIL.mime_header('text/xml');
+    HTP.print(l_clob);
 
 
+END;
+/
+
+
+BEGIN
+ --First create the template
+
+  ORDS.define_template(
+      p_module_name => 'rest-v5',
+      p_pattern     => 'employees/xml/:empno'
+  );
+
+  ORDS.define_handler(
+      p_module_name => 'rest-v5',
+      p_pattern     => 'employees/xml/:empno',
+      p_method      =>  'GET',
+      p_source_type =>  ORDS.source_type_plsql,
+      p_source      => 'BEGIN get_emp_details_xml(:empno); END;'
+  );
+  
+  --http://localhost:9090/ords/webservices/saasservices/employees/xml/:empno
+
+
+END;
+/
+
+---- ** POST Requests Handling.
+--create a template first
+
+BEGIN
+  ORDS.define_module(
+    p_module_name   => 'rest-v6',
+    p_base_path     => 'saasservices'
+    p_comments      => 'This is module will handle POST requests.'
+  )
+
+  ORDS.define_template(
+    p_module_name => 'rest-v6',
+    p_pattern     => '/hr/createEmployee'
+  )
+
+  ORDS.define_handler(
+    p_module_name => 'rest-v6',
+    p_pattern     => '/hr/createEmployee',
+    p_method      => 'POST',
+    p_source_type => ORDS.source_type_plsql,
+    p_source      => 'BEGIN create_employee(p_body => :body); END;'
+  )
+---http://localhost:9090/ords/webservices/saasservices/hr/createEmployee
+
+END;
+/
+--Create the Procedure
+
+CREATE OR REPLACE PACKAGE HandlePostRequests
+AS
+BEGIN 
+    PROCEDURE create_employee((p_body BLOB);
+    -- PROCEDURE convert_blob_to_clob((p_body BLOB);
+END HandlePostRequests;
+/
+
+CREATE OR REPLACE PACKAGE BODY HandlePostRequests
+AS
+BEGIN 
+    PROCEDURE create_employee((p_body BLOB) IS
+    l_clob CLOB;
+    BEGIN
+        l_clob := convert_blob_to_clob(p_body);
+        INSERT INTO employees
+        SELECT 
+
+    END;
+
+
+
+
+    FUNCTION convert_blob_to_clob((p_body BLOB);
+END HandlePostRequests;
+/
